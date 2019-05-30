@@ -1,0 +1,322 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="//cdn.muicss.com/mui-latest/css/mui.min.css" rel="stylesheet" type="text/css" />
+    <style>body,html{height:100%}body,button,html,input,textarea{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-shadow:1px 1px 1px rgba(0,0,0,.004)}header{position:fixed;top:0;right:0;left:0;z-index:2}header ul.mui-list--inline{margin-bottom:0}header a{color:#fff}header table{width:100%}#content-wrapper{min-height:100%;box-sizing:border-box;margin-bottom:-100px;padding-bottom:100px}footer{box-sizing:border-box;height:100px;background-color:#eee;border-top:1px solid #e0e0e0;padding-top:35px}</style>
+    <script src="//cdn.muicss.com/mui-latest/js/mui.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+    <script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
+  <script src="https://code.jquery.com/ui/1.11.1/jquery-ui.min.js"></script>
+
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css" />
+
+    <style>
+        .page {display: none;}
+    </style>
+    <title>Offers Search - Aditya</title>
+</head>
+
+<body>
+    <script>
+
+        var AREA_ID, STORE_ID, STORE_NAME, OFFER_ID;
+
+        function selectArea(e) {
+            $("#pane-head-1")[0].innerText = "Area:"+e.innerText;
+            console.log(e.innerText);
+            AREA_ID = e.innerText;
+
+            var Store_temp = '<button class="mui-btn mui-btn--primary" onclick="selectStore(this);">{storeID}</button>';
+            $.get("/api/areacode/" + AREA_ID + "/storename/", function(data, status){
+                for (var i=0; i<data.length; i++) {
+                    $("#pane-api-2")[0].innerHTML+=Store_temp.replace("{storeID}", data[i].storeName + " - " + data[i].storeID);
+                }
+            });
+            activateNext();
+        }
+
+        function selectStore(e) {
+            STORE_ID = e.innerText.split(" - ")[1].toLowerCase();
+            STORE_NAME = e.innerText.split(" - ")[0].toLowerCase();
+            $("#pane-head-2")[0].innerText = "Store:"+STORE_ID;
+            console.log(e.innerText);
+
+
+            var Offers_temp = '<div class="mui-panel" style="width: 90%;">'+
+                '<table><tr>' +
+                '<td><table><tr>'+
+                '<img style="width: 50%;object-fit:cover;" src="{url}">' +
+                '<td><h2 style="align: center;">{prodDET}</h2></td>' +
+                '</tr></table></td>' +
+                '<td><table>'+
+                    '<tr><td><h2>{offerDET}</h2></td></tr>' +
+                    '<tr><td><p>{begins}</p></td></tr>' +
+                    '<tr><td><p>{ends}</p></td></tr>' +
+                    '<tr><td><button class="mui-btn mui-btn--primary" onclick="copyCode(this);">{offerID}</button></div></td></tr>'+
+                '</table></td>' +
+                '</tr></table>';
+            //var Offers_temp = '<button class="mui-btn mui-btn--primary" onclick="selectOffer(this);">{offerID}</button>';
+            console.log("URL : " + "/api/areacode/" + AREA_ID + "/storename/" + STORE_ID + "/offers/")
+            $.get("/api/areacode/" + AREA_ID + "/storename/" + STORE_ID + "/offers/", function(data, status){
+                for (var i=0; i<data.length; i++) {
+                    var beg = new Date(data[i].begins)
+                    var end = new Date(data[i].ends)
+                    $("#pane-api-3")[0].innerHTML+= Offers_temp.replace("{offerID}",data[i].offerID).replace("{url}", data[i].imageURL).replace("{prodDET}", data[i].productDetails).replace("{offerDET}", data[i].offerDetails).replace("{begins}", "Begins : " + beg.toString().split(beg.getFullYear())[0] + beg.getFullYear() ).replace("{ends}", "Ends : " + end.toString().split(end.getFullYear())[0] + end.getFullYear());
+                }
+            });
+            activateNext();
+        }
+
+        function copyCode(e) {
+            copyToClipboard(e.innerText);
+            alert("Copied : " + e.innerText);
+        }
+        const copyToClipboard = str => {
+            const el = document.createElement('textarea');
+            el.value = str;
+            el.setAttribute('readonly', '');
+            el.style.position = 'absolute';
+            el.style.left = '-9999px';
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+        };
+
+
+        function selectOffer(e) {
+            //STORE_ID = e.innerText.split(" - ")[1].toLowerCase();
+            console.log(e.innerText);
+            $("#pane-head-3")[0].innerText = "Offer:"+OFFER_ID;
+         //   activateNext();
+        }
+
+        function search(e) {
+            console.log(e.value);
+            var Offers_temp = '<div class="mui-panel" style="width: 90%;">'+
+                '<table><tr>' +
+                '<td><table><tr>'+
+                    '<img style="width: 50%;object-fit:cover;" src="{url}">' +
+                    '<td><h2 style="align: center;">{prodDET}</h2></td>' +
+                '</tr></table></td>' +
+                '<td><table>'+
+                    '<tr><td><h2>{offerDET}</h2></td></tr>' +
+                    '<tr><td><p>{begins}</p></td></tr>' +
+                    '<tr><td><p>{ends}</p></td></tr>' +
+                    '<tr><td><button class="mui-btn mui-btn--primary" onclick="copyCode(this);">{offerID}</button></div></td></tr>'+
+                '</table></td>' +
+                '</tr></table>';
+
+            $.get("/api/search/" + e.value, function(data, status){
+                $("#search-result")[0].innerHTML="";
+                for (var i=0; i<data.length; i++) {
+                    //console.log(data[i])
+                    var beg = new Date(data[i].begins)
+                    var end = new Date(data[i].ends)
+                    $("#search-result")[0].innerHTML+= Offers_temp.replace("{offerID}",data[i].offerID).replace("{url}", data[i].imageURL).replace("{prodDET}", data[i].productDetails).replace("{offerDET}", data[i].offerDetails).replace("{begins}", "Begins : " + beg.toString().split(beg.getFullYear())[0] + beg.getFullYear() ).replace("{ends}", "Ends : " + end.toString().split(end.getFullYear())[0] + end.getFullYear());
+                }
+
+                if (data.length==0) {
+                    $("#search-result")[0].innerHTML="<h2>No Matches</h2>"
+                }
+            });
+        }
+
+        function startDP(e) {
+            $(e).datepicker();
+            $(e).datepicker("show");
+        }
+
+        function uploadOffer() {
+            if (AREA_ID && STORE_ID && STORE_NAME) {
+                $('<form>' + 
+                    '<input id="P_Name" placeholder="Product Name"><br>' +
+                    '<input id="Of_Name" placeholder="Offer Details"><br>' +
+                    '<input id="P_URL" placeholder="Picture URL"><br>' +
+                    '<input id="date_begin" placeholder="Start Date" onclick="startDP(this)"><br>' +
+                    '<input id="date_end" placeholder="End Date" onclick="startDP(this)"><br>' +
+                    '</form>').dialog({
+                    modal: true,
+                    title: "New: " + STORE_NAME,
+                    show: 'blind',
+                    hide: 'fold',
+                    draggable: false,
+                    resizable: false,
+                    buttons: {
+                    'Add': function() {
+                        var P_Name = $('#P_Name').val();
+                        var Of_Name = $('#Of_Name').val();
+                        var P_URL = $('#P_URL').val();
+
+                        var t1 = $('#date_begin').val();
+                        var t2 = $('#date_end').val();
+                        
+                        var ta = t1.split("/");
+                        var startTime = new Date(ta[1] + "/" + ta[0] + "/" + ta[2]).getTime();
+                        var tb = t1.split("/");
+                        var endTime = new Date(tb[1] + "/" + tb[0] + "/" + tb[2]).getTime();
+
+                        if (t2<t1) {
+                            $('<h2>Please enter valid dates</h2>').dialog({
+                                modal: true,
+                                title: "Invalid Date",
+                                show: 'blind',
+                                hide: 'fold',
+                                draggable: false,
+                                resizable: false,
+                                buttons: {
+                                'Ok': function() {
+                                        $(this).dialog('close');
+                                        $(this).dialog('destroy');
+                                    }
+                                }
+                            });
+                        } else {
+                            console.log("Adding : " + P_Name);
+                            $.ajax({
+                                type: 'POST',
+                                data: JSON.stringify({
+                                    imageURL : P_URL,
+                                    productDetails : P_Name,
+                                    offerDetails : Of_Name,
+                                    begins : t1,
+                                    ends : t2
+                                }),
+                                contentType: 'application/json',
+                                url: '/api/areacode/560005/storename/db63rbuqz/offers/',		
+                                success: function(data) {
+                                    console.log('success');
+                                    console.log(JSON.stringify(data));
+                                    $('<h2>Uploaded ' + P_Name + '</h2><p>Reload for Changes</p>').dialog({
+                                        modal: true,
+                                        title: "Upload Successful",
+                                        show: 'blind',
+                                        hide: 'fold',
+                                        draggable: false,
+                                        resizable: false,
+                                        buttons: {
+                                        'Ok': function() {
+                                                $(this).dialog('close');
+                                                $(this).dialog('destroy');
+                                            }
+                                        }
+                                    });
+                                }
+                            });
+                            $(this).dialog('close');
+                            $(this).dialog('destroy');
+                        }
+                    }
+                    }
+                });
+            }
+        }
+    </script>
+    <header class="mui-appbar mui--z1">
+        <div class="mui-container">
+            <table>
+                <tr class="mui--appbar-height">
+                    <td class="mui--text-title" style="color: white;">Offers Search</td>
+
+                    <td class="mui--appbar-height" align="right">
+                        <ul class="mui-list--inline mui--text-body2">
+                            <li>  <button id="search-button" class="mui-btn mui-btn--raised mui-btn--primary">Search</button>
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </header>
+    <br>
+    <div id="content-wrapper" class="mui--text-center" style="min-height: 100%; margin-bottom: -50px;">
+        <div class="mui--appbar-height"></div>
+        <div id="PAGE-1" class="page">
+                    <ul class="mui-tabs__bar mui-tabs__bar--justified">
+                        <li class="mui--is-active"><a data-mui-toggle="tab" data-mui-controls="pane-api-1" id="pane-head-1">Area Code</a></li>
+                        <li><a data-mui-toggle="tab" data-mui-controls="pane-api-2" id="pane-head-2">Store</a></li>
+                        <li><a data-mui-toggle="tab" data-mui-controls="pane-api-3" id="pane-head-3">Offers</a></li>
+                    </ul>
+                    <br><br>
+                <div class="mui-tabs__pane mui--is-active" id="pane-api-1">
+                    <h2>Choose an Area Code</h2>
+                    <!-- button class="mui-btn mui-btn--primary" onclick="selectArea(this);">{areaID}</button -->
+                </div>
+                <div class="mui-tabs__pane" id="pane-api-2">
+                    <h2>Choose a Store</h2>
+                    <!-- button class="mui-btn mui-btn--primary" onclick="selectStore(this);">{areaID}</button -->
+                </div>
+                <div class="mui-tabs__pane" id="pane-api-3">
+                    <button class="mui-btn mui-btn--primary" onclick="uploadOffer();">Upload Offer To Store</button>
+                </div>
+                <script>
+                var paneIds = ['pane-api-1', 'pane-api-2', 'pane-api-3'],
+                currPos = 0;
+          
+                function activateNext() {
+                // increment id
+                currPos = (currPos + 1) % paneIds.length;
+                      
+                // activate tab
+                mui.tabs.activate(paneIds[currPos]);
+                }
+                </script>
+                <br><br><br>
+                <!--hr><button class="mui-btn mui-btn--primary" onclick="activateNext();">Next</button -->
+            </div>
+        <div id="PAGE-2" class="page" style="margin: 10px;">        
+        <div class="mui-textfield">
+                <input type="text" placeholder="Press Enter to Search" id="search-query" onchange="search(this)">
+        </div>
+        <div id="search-result">
+
+        </div>
+        </div>
+        <div style="height: 50px;"></div>
+    </div>
+    <footer>
+        <div class="mui-container mui--text-center">
+            Made by <a href="https://github.com/AdityaNG">Aditya N G</a>
+        </div>
+    </footer>
+        <script>
+        var CURRENT_PAGE = "1"
+        window.onload = function() {
+            showPage(CURRENT_PAGE);
+            $("#search-button").on('click',(e) => {
+                togglePage();
+            });
+
+            $.get("/api/areacode", function(data, status){
+                console.log(data);
+            });
+            var Area_temp = '<button class="mui-btn mui-btn--primary" onclick="selectArea(this);">{areaID}</button>';
+            $.get("/api/areacode", function(data, status){
+                for (var i=0; i<data.length; i++) {
+                    $("#pane-api-1")[0].innerHTML+= Area_temp.replace("{areaID}", data[i].areaID);
+                }
+            });
+        }
+        function closeAllPages() {
+            $(".page")[0].style.display = 'none';
+            $(".page")[1].style.display = 'none';
+        }
+        function togglePage() {
+            if (CURRENT_PAGE=="1") {
+                CURRENT_PAGE="2";
+                showPage("2")
+            } else {
+                showPage("1")
+            }
+        }
+        function showPage(p) {
+            closeAllPages();
+            $("#PAGE-"+p)[0].style.display = 'block';
+            CURRENT_PAGE = p;
+        }
+    </script>
+</body>
+</html>
